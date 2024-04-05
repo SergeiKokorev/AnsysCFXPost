@@ -10,7 +10,7 @@ from gui.view import MainWindow
 def main():
 
     app = QApplication()
-    window = MainWindow(model=None)
+    window = MainWindow()
     window.show()
     app.exec()
 

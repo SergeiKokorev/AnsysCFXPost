@@ -65,7 +65,6 @@ class DoubleLineEdit(QLineEdit):
         self.setValidator(validator)
 
     def data(self) -> float:
-        
         return float(self.text().replace(',', '.'))
 
 

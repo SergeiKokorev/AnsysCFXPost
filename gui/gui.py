@@ -10,13 +10,13 @@ from tools.tools import generate_dialog
 
 class Dialog(QDialog):
 
-    def __init__(self, title: str, objects: dict, model=None, parent: QWidget = None, f: Qt.WindowType = Qt.WindowType.Dialog) -> None:
+    def __init__(self, title: str, objects: list, model=None, parent: QWidget = None, f: Qt.WindowType = Qt.WindowType.Dialog) -> None:
         super().__init__(parent, f)
 
-        self.objects = [obj['name'] for obj in objects]
+        self.objects = objects.copy()
 
         layout = QVBoxLayout()
-        self.data = {}
+        self.data = None
 
         self.setWindowModality(Qt.WindowModality.WindowModal)
         self.setWindowTitle(title)
@@ -32,10 +32,13 @@ class Dialog(QDialog):
         self.setLayout(layout)
 
     def accept(self):
+        self.data = {}
+        objects = [obj['name'] for obj in self.objects]
         for child in self.children():
-            if (name := child.objectName()) in self.objects:
+            if (name := child.objectName()) in objects:
                 try:
-                    self.data[name] = child.data()
+                    title = [obj['title'] for obj in self.objects if obj['name'] == name][0]
+                    self.data[name] = (title, child.data())
                 except ValueError:
                     msg = QErrorMessage()
                     msg.setWindowTitle('Value error')
