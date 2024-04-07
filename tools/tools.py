@@ -44,16 +44,16 @@ def get_data(file: str) -> list:
         return None
     
 
-def generate_dialog(widgets: dict, model: List[Domain]) -> QFormLayout:
+def generate_dialog(widgets: dict, model: List[Domain], parent=None) -> QFormLayout:
     
     layout = QFormLayout()
     for obj in widgets:
         widget = obj['widget']
         w = None
         if widget in wd.keys():
-            w = wd[widget]()
+            w = wd[widget](parent=parent)
         elif widget in mvc.keys():
-            w = mvc[widget](model=model)
+            w = mvc[widget](parent=parent, model=model)
         if not w:
             continue
         w.setObjectName(obj['name'])

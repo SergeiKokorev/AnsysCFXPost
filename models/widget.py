@@ -51,7 +51,7 @@ class IntLineEdit(QLineEdit):
         self.setValidator(validator)
 
     def data(self) -> int:
-        return int(self.text())
+        return int(self.text() if self.text() else 0)
 
 
 class DoubleLineEdit(QLineEdit):
@@ -65,7 +65,7 @@ class DoubleLineEdit(QLineEdit):
         self.setValidator(validator)
 
     def data(self) -> float:
-        return float(self.text().replace(',', '.'))
+        return float(self.text().replace(',', '.') if self.text() else 0.0)
 
 
 class InterfaceComboBox(QWidget):

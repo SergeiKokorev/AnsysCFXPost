@@ -1,3 +1,4 @@
+from copy import deepcopy
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget, QDialog, QVBoxLayout, QDialogButtonBox,
@@ -6,19 +7,21 @@ from PySide6.QtWidgets import (
 
 
 from tools.tools import generate_dialog
+from gui.models import Template
+from tools.const import MVC_WIDGETS as mvc, WIDGETS as wg
 
 
 class Dialog(QDialog):
 
-    def __init__(self, title: str, objects: list, model=None, parent: QWidget = None, f: Qt.WindowType = Qt.WindowType.Dialog) -> None:
+    def __init__(self, title: str, objects: list, model, parent: QWidget = None, f: Qt.WindowType = Qt.WindowType.Window) -> None:
         super().__init__(parent, f)
+        self.setWindowModality(Qt.WindowModality.WindowModal)
 
-        self.objects = objects.copy()
+        self.objects = deepcopy(objects)
+        self.template = None
+        self.title = title
 
         layout = QVBoxLayout()
-        self.data = None
-
-        self.setWindowModality(Qt.WindowModality.WindowModal)
         self.setWindowTitle(title)
         
         btn = QDialogButtonBox(
@@ -27,26 +30,22 @@ class Dialog(QDialog):
         btn.accepted.connect(self.accept)
         btn.rejected.connect(self.reject)
 
-        layout.addLayout(generate_dialog(objects, model))
+        layout.addLayout(generate_dialog(objects, model, self))
         layout.addWidget(btn)
         self.setLayout(layout)
 
     def accept(self):
-        self.data = {}
-        objects = [obj['name'] for obj in self.objects]
-        for child in self.children():
-            if (name := child.objectName()) in objects:
-                try:
-                    title = [obj['title'] for obj in self.objects if obj['name'] == name][0]
-                    self.data[name] = (title, child.data())
-                except ValueError:
-                    msg = QErrorMessage()
-                    msg.setWindowTitle('Value error')
-                    msg.showMessage(f'There must be no empty fields in the form.')
-                    msg.exec()
-                    return None
+
+        tmp_data = dict([(w['name'], None) for w in self.objects])
+        self.template = Template(name=self.title, data=tmp_data)
+        widgets = {**mvc, **wg}
+
+        for widget in self.objects:
+            child = self.findChild(widgets[widget['widget']], widget['name'])
+            if child: self.template.data[widget['name']] = ( widget['title'], child.data())
+
         return super().accept()
     
     def reject(self):
-        self.data = None
+        self.template = None
         return super().reject()

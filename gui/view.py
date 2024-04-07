@@ -5,7 +5,7 @@ from typing import Sequence
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QGridLayout, QLineEdit,
     QListView, QLabel, QDialogButtonBox, QPushButton,
-    QFileDialog, QComboBox
+    QFileDialog, QComboBox, QButtonGroup
 )
 from PySide6.QtCore import Qt, QModelIndex
 
@@ -30,18 +30,28 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('ANSYS Post Processing')
 
         self.__cdir = os.sep
+        self.__res_files = None
+        self.__out_file = None
+        self.addTmpBtnID = 2
 
         layout = QGridLayout()
         widget = QWidget()
         widget.setLayout(layout)
 
-        add_tmp_btn = QPushButton('Add Template')
+        # Buttons
+        self.add_tmp_btn = QPushButton('Add Template')
+        self.add_tmp_btn.setEnabled(False)
         std_btn = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
-        std_btn.accepted.connect(self.accept)
-        std_btn.rejected.connect(self.reject)
-        add_tmp_btn.clicked.connect(self.add)
+
+        self.buttonGroup = QButtonGroup()
+
+        self.buttonGroup.addButton(QPushButton('add res'), 0)
+        self.buttonGroup.addButton(QPushButton('add out'), 1)
+        self.buttonGroup.addButton(QPushButton('add template'), self.addTmpBtnID)
+        self.buttonGroup.idClicked.connect(self.add)
+        self.buttonGroup.button(2).setEnabled(False)
 
         self.tmpEdit = QLineEdit(self)
         self.tmpEdit.setPlaceholderText('Enter template name...')
@@ -56,12 +66,14 @@ class MainWindow(QMainWindow):
 
         self.info = QLabel()
 
-        layout.addWidget(self.tmpView, 0, 0)
-        layout.addWidget(self.tmpCmb, 1, 0)
-        layout.addWidget(self.tmpEdit, 2, 0)
-        layout.addWidget(add_tmp_btn, 3, 0)
-        layout.addWidget(self.info, 4, 0)
-        layout.addWidget(std_btn, 5, 0)
+        layout.addWidget(self.tmpView, 0, 0, 1, 2)
+        layout.addWidget(self.tmpCmb, 1, 0, 1, 2)
+        layout.addWidget(self.tmpEdit, 2, 0, 1, 2)
+        layout.addWidget(self.buttonGroup.button(0), 3, 0)
+        layout.addWidget(self.buttonGroup.button(1), 3, 1)
+        layout.addWidget(self.buttonGroup.button(2), 4, 0, 1, 2)
+        layout.addWidget(self.info, 5, 0, 1, 2)
+        layout.addWidget(std_btn, 6, 0, 1, 2)
 
         self.setCentralWidget(widget)
 
@@ -71,40 +83,61 @@ class MainWindow(QMainWindow):
     def reject(self):
         pass
 
-    def add(self):
-
-        res_files = QFileDialog.getOpenFileNames(
+    def add_res(self):
+        res = QFileDialog.getOpenFileNames(
             self, 'Add ANSYS res files...', self.__cdir, 'Ansys res (*.res)'
         )
+        self.__cdir = os.path.split(res[0][0])[0]
+        return res
 
-        self.__cdir = os.path.split(res_files[0][0])[0]
-        out_file = QFileDialog.getOpenFileName(
+    def add_out(self):
+        out = QFileDialog.getOpenFileName(
             self, 'Open ANSYS out file...', self.__cdir, 'ANSYS out (*.out)'
         )
-
-        self.__cdir = os.path.split(out_file[0])[0]
-        model = get_data(out_file[0])
-        name = self.tmpEdit.text() if self.tmpEdit.text() else self.tmpCmb.currentText()
-
-        object = get_templates(TMP)
-        tmp = self.tmpCmb.currentText()
-        dialog = Dialog(title=name, objects=object[tmp], model=model)
-        dialog.show()
-        dialog.exec()
-
-        data = dialog.data
-        
-        if not data:
+        if not out:
             return None
         
-        template = Template(name=name, data=data, files=res_files[1])
+        self.__cdir = os.path.split(out[0])[0]
+        self.add_tmp_btn.setEnabled(True)
+        return out
 
-        self.tmpModel.templates.append(template)
-        self.tmpModel.layoutChanged.emit()
+    def add(self, buttonID: int):
+        
+        match buttonID:
+            case 0:
+                self.__res_files = QFileDialog.getOpenFileNames(
+                    self, 'ANSYS res files...', self.__cdir, 
+                    'ASYS res (*.res)'
+                )
+                self.__cdir = os.path.split(self.__res_files[0][0])[0]
+            case 1:
+                self.__out_file = QFileDialog.getOpenFileName(
+                    self, 'ANSYS out file...', self.__cdir,
+                    'ANSYS out (*.out)'
+                )
+                self.__cdir = os.path.split(self.__out_file[0])[0]
+                self.buttonGroup.button(self.addTmpBtnID).setEnabled(True)
+            case self.addTmpBtnID:
+                self.buttonGroup.button(self.addTmpBtnID).setEnabled(False)
+                model: List[Domain] = get_data(self.__out_file[0])
+                template = self.tmpCmb.currentText()
+                name = self.tmpEdit.text() if self.tmpEdit.text() else template
+                obj = get_templates(TMP)
+                dialog = Dialog(parent=self, title=name, objects=obj[template], model=model)
+                dialog.exec()
 
-        self.tmpEdit.clear()
-        self.tmpEdit.setPlaceholderText('Enter template name')
+                template = dialog.template
 
+                if not template:
+                    return None
+                
+                self.tmpModel.layoutChanged.emit()
+                self.__res_files = None
+                self.__out_file = None
+                self.tmpModel.templates.append(template)
+                self.tmpEdit.clear()
+                self.tmpEdit.setPlaceholderText('Enter template name')
+        
     def setInfo(self, index: QModelIndex):
         item = self.tmpModel.item(index)
         self.info.setText(item.info())
