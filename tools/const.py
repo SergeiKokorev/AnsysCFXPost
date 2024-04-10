@@ -1,4 +1,4 @@
-from models.widget import *
+from gui.widget import *
 
 TMP = r'tmp/tmp.json'
 

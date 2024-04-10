@@ -1,10 +1,8 @@
 import json
+from PySide6.QtWidgets import QApplication
 
-from PySide6.QtWidgets import QApplication, QDialogButtonBox
 
-
-from tools.tools import get_data
-from gui.view import MainWindow
+from gui.post_view import MainWindow
 
 
 def main():
@@ -13,6 +11,8 @@ def main():
     window = MainWindow()
     window.show()
     app.exec()
+
+    print(window.data())
 
 
 if __name__ == "__main__":

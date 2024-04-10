@@ -3,8 +3,8 @@ from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QPushButton, QDialog,
     QDialogButtonBox, QVBoxLayout
 )
-from PySide6.QtGui import QIntValidator, QDoubleValidator
-from PySide6.QtCore import Qt, QLocale
+from PySide6.QtGui import QIntValidator, QValidator, QDoubleValidator, QRegularExpressionValidator
+from PySide6.QtCore import Qt, QLocale, QRegularExpression
 
 
 from models.gui import *
@@ -35,7 +35,8 @@ class PopupDomainTree(QDialog):
         layout.addWidget(btn)
 
     def accept(self) -> None:
-        self.currentItem = self.model.childItem(self.tree.currentIndex())
+        index = self.tree.currentIndex()
+        self.currentItem = self.model.childItem(index)
         return super().accept()
 
     def reject(self):
@@ -58,23 +59,23 @@ class DoubleLineEdit(QLineEdit):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        locale = QLocale(QLocale.English, QLocale.UnitedStates)
-        validator = QDoubleValidator(self)
-        validator.setNotation(QDoubleValidator.Notation.StandardNotation)
-        validator.setLocale(locale)
+        reg = QRegularExpression()
+        reg.setPattern(r'[0-9]*\.{0, 1}[0-9]*')
+        validator = QRegularExpressionValidator()
+        validator.setRegularExpression(reg)
         self.setValidator(validator)
 
     def data(self) -> float:
-        return float(self.text().replace(',', '.') if self.text() else 0.0)
+        return float(self.text()) if self.text() else 0.0
 
 
 class InterfaceComboBox(QWidget):
 
-    def __init__(self, *args, model: List[Domain], **kwargs) -> None:
+    def __init__(self, *args, model: Domains, **kwargs) -> None:
         super(InterfaceComboBox, self).__init__(*args, **kwargs)
 
         self.model = model
-        list_model = ListModel(model=model)
+        list_model = ListModel(model=self.model.boundaries())
 
         layout = QHBoxLayout()
 

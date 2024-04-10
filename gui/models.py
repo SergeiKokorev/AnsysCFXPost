@@ -3,28 +3,12 @@ from typing import Any, List
 from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt
 
 
-from models.data import Domain
-
-
-@dataclass
-class Template:
-    name: str
-    data: dict = field(default_factory=dict)
-    files: List[str] = field(default_factory=list)
-
-    def __str__(self):
-        return self.name
-
-    def info(self):
-        out = f'{self.name}\n'
-        for v in self.data.values():
-            out += f'\t{v[0]}\t{v[1]}\n'
-        return out
+from models.data import Template
 
 
 class TemplateModel(QAbstractListModel):
 
-    def __init__(self, *args, templates: List[Template]=None, **kwargs):
+    def __init__(self, *args, templates=None, **kwargs):
 
         super(TemplateModel, self).__init__(*args, **kwargs)
         self.templates = templates or []
