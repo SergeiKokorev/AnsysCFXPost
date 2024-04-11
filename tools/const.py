@@ -1,12 +1,12 @@
-from gui.widget import *
+from gui.widget import InterfaceComboBox, IntLineEdit, DoubleLineEdit
 
 TMP = r'tmp/tmp.json'
 
 MVC_WIDGETS = {
-    'interfaces': InterfaceComboBox
+    'Interfaces': InterfaceComboBox
 }
 
 WIDGETS = {
-    'int_line': IntLineEdit,
-    'dbl_line': DoubleLineEdit
+    'Integer number input': IntLineEdit,
+    'Double number input': DoubleLineEdit
 }

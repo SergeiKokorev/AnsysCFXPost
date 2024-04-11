@@ -1,8 +1,108 @@
 from __future__ import annotations
 
+from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 from typing import List
 from dataclasses import dataclass, field
+
+
+@dataclass
+class Data(metaclass=ABCMeta):
+
+    name: str
+    
+    def item(self):
+        return self.name
+
+    @abstractmethod
+    def items(self) -> list:
+        pass
+
+    @abstractmethod
+    def rowCount(self) -> int:
+        pass
+
+    @abstractmethod
+    def columnCount(self) -> int:
+        pass
+
+    @abstractmethod
+    def addItem(self) -> None:
+        pass
+    
+    @abstractmethod
+    def addItems(self) -> None:
+        pass
+
+    @abstractmethod
+    def delItem(self, index: int) -> None:
+        pass
+
+
+@dataclass
+class DataCache(metaclass=ABCMeta):
+    cache: list = field(default_factory=list)
+
+    def rowCount(self):
+        return len(self.cache)
+
+    def items(self):
+        return deepcopy(self.cache)
+    
+    def item(self, index: int):
+        if not (0 <= index <= self.rowCount()):
+            return None
+        
+        return self.cache[index]
+
+    def child(self, row: int, col: int):
+        if not (0 <= row <= self.rowCount()):
+            return None
+        
+        if not(0 <= col <= self.cache[row].rowCount()):
+            return None
+        
+        return self.cache[row].item(col)
+    
+    def children(self, row):
+        if (0 <= row <= self.rowCount()):
+            return None
+        
+        return self.cache[row].items()
+
+    def addChild(self, index: int, item):
+        if not (0 <= index <= self.rowCount()):
+            return None
+        self.cache[index].addItem(item)
+
+    def addChildren(self, index: int, items):
+        if not (0 <= index <= self.rowCount()):
+            return None
+        
+        self.cache[index].addItems(items)
+
+    def columnCount(self, index: int):
+        if not (0 <= index <= self.rowCount()):
+            return None
+        return self.cache[index].rowCount()
+
+    def delItem(self, index: int):
+        if not (0 <= index <= self.rowCount()):
+            return None
+        
+    def delChild(self, row: int, col: int):
+        if not (0 <= row <= self.rowCount()):
+            return None
+
+        self.cache[row].delItem(col)
+
+    @abstractmethod
+    def addItem(self, item):
+        pass
+
+    @abstractmethod
+    def addItems(self, items):
+        pass
 
 
 @dataclass
@@ -25,7 +125,7 @@ class Boundary:
 
 
 @dataclass
-class Domain:
+class Domain(Data):
     index: int
     name: str
     type: str = None
@@ -66,12 +166,15 @@ class Domain:
     def rowCount(self):
         return len(self.boundaries)
 
+    def columnCount(self) -> int:
+        return 1
+
     def __str__(self):
         return f'{self.name}'
 
 
 @dataclass
-class Template:
+class Template(Data):
     name: str
     data: dict = field(default_factory=dict)
     model: Domains = None
@@ -109,115 +212,69 @@ class Template:
 
 
 @dataclass
-class Boundaries:
-    boundaries: List[Boundary] = field(default_factory=list)
+class Boundaries(DataCache):
 
     def items(self):
-        return deepcopy(self.boundaries)
+        return deepcopy(self.cache)
     
     def item(self, index: int) -> Boundary:
-        return self.boundaries[index]
+        return self.cache[index]
     
     def rowCount(self):
-        return len(self.boundaries)
+        return len(self.cache)
     
     def columnCount(self):
         return 1
     
     def addItem(self, item: Boundary) -> None:
-        self.boundaries.append(item)
+        self.cache.append(item)
 
     def addItems(self, items: List[Boundary]) -> None:
-        self.boundaries.extend(items)
+        self.cache.extend(items)
 
     def delItem(self, index: int) -> Boundary:
-        return self.boundaries.pop(index)
+        return self.cache.pop(index)
     
     def parent(self, index: int):
-        return self.boundaries[index].parent()
+        return self.cache[index].parent()
     
 
 @dataclass
-class Domains:
-    domains: List[Domain] = field(default_factory=list)
-
-    def items(self):
-        return deepcopy(self.domains)
-
-    def item(self, index: int):
-        return self.domains[index]
-
-    def children(self, index: int):
-        return self.domains[index].items()
-
-    def child(self, row: int, col: int) -> Boundary:
-        return self.domains[row].item(col)
-
-    def columnCount(self, index: int) -> int:
-        return self.domains[index].rowCount()
+class Domains(DataCache):
 
     def addItem(self, item: Domain):
-        self.domains.append(item)
+        if not isinstance(item, Domain):
+            return None
+
+        self.cache.append(item)
 
     def addItems(self, items: List[Domain]):
-        self.domains.extend(items)
+        if not hasattr(items, '__iter__'):
+            return None
+        
+        if not all([isinstance(i, Domain) for i in items]):
+            return None
+        self.cache.extend(items)
 
-    def delItem(self, index: int) -> Domain:
-        return self.domains.pop(index)
-    
-    def addChild(self, index: int, child: Boundary):
-        self.domains[index].addItem(child)
-
-    def addChildren(self, index: int, children: List[Boundary]):
-        self.domains[index].addItems(children)
-
-    def delChild(self, row: int, col: int) -> Boundary:
-        return self.domains[row].delItem(col)
-
-    def rowCount(self):
-        return len(self.domains)
-    
-    def boundaries(self):
-        return Boundaries([b for d in self.domains for b in d.items()])
+    def listModel(self):
+        return Boundaries([b for d in self.cache for b in d.items()])
 
 
 @dataclass
-class Templates:
-    templates: List[Template] = field(default_factory=list)
-
-    def items(self):
-        return deepcopy(self.templates)
-
-    def item(self, index: int):
-        return self.templates[index]
-
-    def children(self, index: int):
-        return self.templates[index].items()
-
-    def child(self, row: int, col: int) -> str:
-        return self.templates[row].item(col)
+class Templates(DataCache):
 
     def addItem(self, item: Template):
-        self.templates.append(item)
+        if not isinstance(item, Template):
+            return None
+        
+        self.cache.append(item)
 
     def addItems(self, items: List[Template]):
-        self.templates.extend(items)
+        if not hasattr(items, '__iter__'):
+            return None
+        
+        if not all([isinstance(i, Template) for i in items]):
+            return None
+        
+        self.cache.extend(items)
 
-    def delItem(self, index: int) -> Template:
-        return self.templates.pop(index)
-    
-    def addChild(self, index: int, item: Template):
-        self.templates[index].addItem(item)
-
-    def addChildren(self, index: int, children: List[Template]):
-        self.templates[index].addItems(children)
-
-    def delChild(self, row: int, col: int) -> Template:
-        return self.templates[row].delItem(col)
-
-    def rowCount(self):
-        return len(self.templates)
-    
-    def columnCount(self, index: int) -> int:
-        return self.templates[index].rowCount()
-   

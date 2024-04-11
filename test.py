@@ -8,7 +8,7 @@ from PySide6.QtCore import QModelIndex
 
 from models.data import *
 from models.gui import *
-from gui.gui import TemplateDialog
+from gui.dialogues import TemplateDialog
 from tools.tools import get_data
 
 

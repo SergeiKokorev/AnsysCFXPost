@@ -2,13 +2,13 @@ import json
 from PySide6.QtWidgets import QApplication
 
 
-from gui.post_view import MainWindow
+from gui.views import PostView
 
 
 def main():
 
     app = QApplication()
-    window = MainWindow()
+    window = PostView()
     window.show()
     app.exec()
 

@@ -3,16 +3,17 @@ import json
 
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QGridLayout,
-    QLabel, QDialogButtonBox, QPushButton,
-    QFileDialog, QComboBox, QButtonGroup, QLineEdit
+    QDialogButtonBox, QPushButton,
+    QFileDialog, QComboBox, QLineEdit,
+    QVBoxLayout, QHBoxLayout
 )
-from PySide6.QtCore import Qt, QModelIndex
+from PySide6.QtCore import Qt
 
 
-from gui.gui import TemplateDialog, TemplateTree
+from gui.dialogues import TemplateDialog, TemplateTree
 from tools.tools import get_data
 from tools.const import TMP
-from models.data import Domains, Templates, Boundaries, Template
+from models.data import Templates
 
 
 def get_templates(file) -> dict:
@@ -21,10 +22,46 @@ def get_templates(file) -> dict:
     return res
 
 
-class MainWindow(QMainWindow):
+class DesignerView(QMainWindow):
+
+    def __init__(self, parent=None, f=Qt.WindowType.Window):
+        super(DesignerView, self).__init__(parent, f)
+        self.setWindowModality(Qt.WindowModality.WindowModal)
+
+        widget = QWidget()
+        layout = QVBoxLayout()
+        widget.setLayout(layout)
+
+        add_widget_btn = QPushButton('+')
+        add_widget_btn.clicked.connect(self.addWidget)
+
+        layout.addWidget(add_widget_btn)
+        self.setCentralWidget(widget)
+    
+    def addWidget(self):
+        layout = self.centralWidget().layout()
+        hbox = QHBoxLayout()
+
+    def delWidget(self):
+        pass
+
+    def moveUp(self):
+        pass
+
+    def moveDown(self):
+        pass
+
+    def accept(self):
+        pass
+
+    def reject(self):
+        pass
+
+
+class PostView(QMainWindow):
 
     def __init__(self, parent: QWidget = None, flags: Qt.WindowType = Qt.WindowType.Window) -> None:
-        super().__init__(parent, flags)
+        super(PostView, self).__init__(parent, flags)
         
         self.setWindowTitle('ANSYS Post Processing')
 
@@ -79,10 +116,10 @@ class MainWindow(QMainWindow):
         if not out_file[0]:
             return None
         
-        self.__dmn, self.__bnd = get_data(out_file[0])
+        self.__dmn = get_data(out_file[0])
         tmp = self.cmbTmp.currentText()
         name = self.tmpName.text() if self.tmpName.text() else tmp
-        dialog = TemplateDialog(title=name, objects=self.__templates[tmp], model=self.__dmn, parent=self)
+        dialog = TemplateDialog(title=name, objects=self.__templates[tmp]['widgets'], model=self.__dmn, parent=self)
         dialog.exec()
 
         if not (data := dialog.data()):

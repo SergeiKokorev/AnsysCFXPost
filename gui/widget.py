@@ -1,55 +1,26 @@
+from __future__ import annotations
+
 from PySide6.QtWidgets import (
-    QLineEdit, QTreeView, QWidget, QComboBox,
-    QWidget, QHBoxLayout, QPushButton, QDialog,
-    QDialogButtonBox, QVBoxLayout
+    QLineEdit, QWidget, QComboBox,
+    QWidget, QHBoxLayout, QPushButton
 )
-from PySide6.QtGui import QIntValidator, QValidator, QDoubleValidator, QRegularExpressionValidator
-from PySide6.QtCore import Qt, QLocale, QRegularExpression
+from PySide6.QtGui import QIntValidator,QRegularExpressionValidator
+from PySide6.QtCore import QRegularExpression
 
 
-from models.gui import *
-
-
-class PopupDomainTree(QDialog):
-
-    def __init__(self, model: List[Domain] = None, parent: QWidget = None, f: Qt.WindowType = Qt.WindowType.Dialog) -> None:
-        super().__init__(parent, f)
-
-        self.model = TreeModel(model=model)
-        self.tree = QTreeView()
-        self.tree.setHeaderHidden(True)
-        self.tree.setModel(self.model)
-        self.setWindowModality(Qt.WindowModality.WindowModal)
-        self.tree.doubleClicked.connect(self.accept)
-        self.currentItem = None
-
-        layout = QVBoxLayout()
-        self.setLayout(layout)
-
-        btn = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        btn.accepted.connect(self.accept)
-        btn.rejected.connect(self.reject)
-        layout.addWidget(self.tree)
-        layout.addWidget(btn)
-
-    def accept(self) -> None:
-        index = self.tree.currentIndex()
-        self.currentItem = self.model.childItem(index)
-        return super().accept()
-
-    def reject(self):
-        self.currentItem = None
-        return super().reject()
+from gui.dialogues import DomainDialog
+from models.gui import ListModel
 
 
 class IntLineEdit(QLineEdit):
 
     def __init__(self, parent=None) -> None:
-        super().__init__(parent)
+        super(IntLineEdit, self).__init__(parent)
         validator = QIntValidator(self)
         self.setValidator(validator)
+
+    def setModel(self, model=None):
+        return None
 
     def data(self) -> int:
         return int(self.text() if self.text() else 0)
@@ -65,23 +36,26 @@ class DoubleLineEdit(QLineEdit):
         validator.setRegularExpression(reg)
         self.setValidator(validator)
 
+    def setModel(self, model=None):
+        return None
+
     def data(self) -> float:
         return float(self.text()) if self.text() else 0.0
 
 
 class InterfaceComboBox(QWidget):
 
-    def __init__(self, *args, model: Domains, **kwargs) -> None:
+    def __init__(self, *args, model=None, **kwargs) -> None:
         super(InterfaceComboBox, self).__init__(*args, **kwargs)
 
-        self.model = model
-        list_model = ListModel(model=self.model.boundaries())
+        self.tree_model = model
+        self.list_model = model.listModel()
+        list_model = ListModel(model=self.list_model)
 
         layout = QHBoxLayout()
 
         self.cmb = QComboBox()
         self.cmb.setModel(list_model)
-
         btn = QPushButton('...')
         btn.clicked.connect(self.popup)
 
@@ -92,7 +66,7 @@ class InterfaceComboBox(QWidget):
 
     def popup(self) -> None:
 
-        tree = PopupDomainTree(model=self.model)
+        tree = DomainDialog(model=self.tree_model)
         tree.show()
         tree.exec()
         if (item := str(tree.currentItem)):

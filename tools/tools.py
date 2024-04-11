@@ -3,7 +3,7 @@ import re
 from PySide6.QtWidgets import QFormLayout
 
 
-from models.data import Domains, Domain, Boundary, Boundaries
+from models.data import Domains, Domain, Boundary
 from tools.const import WIDGETS as wd, MVC_WIDGETS as mvc
 
 
@@ -13,7 +13,6 @@ def get_data(file: str) -> list:
         with open(file, 'r', newline='') as f:
 
             domains = Domains()
-            boundaries = Boundaries()
             domain = re.compile(r'domain:\s*\w*')
             dmn_found = False
             domain_type = re.compile(r'domain\s*type\s*=\s*\w*')
@@ -35,7 +34,6 @@ def get_data(file: str) -> list:
                     elif re.fullmatch(boundary, line.strip().lower()):
                         bnd = Boundary(name=line.split(':')[1].strip(), parentIndex=dmn_index)
                         dmn.addItem(bnd)
-                        boundaries.addItem(bnd)
                     elif re.fullmatch(boundary_type, line.strip().lower()):
                         bnd.type = line.split('=')[1].strip().lower()
                 if re.fullmatch(dmn_end, line.strip().lower()):
@@ -43,7 +41,7 @@ def get_data(file: str) -> list:
                     dmn_index += 1
                 if re.fullmatch(end, line.strip().lower()):
                     break
-        return domains, boundaries
+        return domains
 
     except (FileExistsError, FileNotFoundError, PermissionError):
         return None

@@ -1,15 +1,18 @@
-from typing import Any, Dict, List
+from typing import Any, List
 from PySide6.QtGui import QStandardItemModel, QStandardItem
 from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt
 
 
-from models.data import Domains, Templates, Domain, Boundary, Template, Boundaries
+from models.data import Domains, Templates, Domain, Boundary, Template
 
 
 class ListModel(QAbstractListModel):
 
-    def __init__(self, *args, model: Boundaries | Templates, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         super(ListModel, self).__init__(*args, **kwargs)
+        self.model: List[Boundary | Template] = None
+
+    def setModel(self, model):
         self.model = model
 
     def rowCount(self, parent: QModelIndex=None) -> int:
@@ -32,16 +35,21 @@ class ListModel(QAbstractListModel):
 
 class TreeModel(QStandardItemModel):
     
-    def __init__(self, *args, model: Domains | Templates, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(TreeModel, self).__init__(*args, **kwargs)
-        self.model = model
+        self.model: Domains | Templates = None
 
-        for row, i in enumerate(self.model.items()):
+    def setModel(self, model: List[Domains | Templates]):
+        self.model = model
+        self.update(model)
+
+    def update(self, model):
+        for row, i in enumerate(model.items()):
             item = QStandardItem(str(i))
             for col, c in enumerate(i.items()):
                 child = QStandardItem(str(c))
                 item.setChild(col, child)
-            if isinstance(self.model, Domains): item.setEnabled(False)
+            if isinstance(model, Domains): item.setEnabled(False)
             self.setItem(row, item)
 
     def addItem(self, item: Template | Domain):

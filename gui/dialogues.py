@@ -19,7 +19,41 @@ class WidgetDialog(QDialog):
 
     def __init__(self, parent: QWidget = None, f: Qt.WindowType = Qt.WindowType.Window) -> None:
         super(WidgetDialog, self).__init__(parent, f)
+        widgets = None
         
+
+class DomainDialog(QDialog):
+
+    def __init__(self, model: List[Domain] = None, parent: QWidget = None, f: Qt.WindowType = Qt.WindowType.Dialog) -> None:
+        super().__init__(parent, f)
+
+        self.model = TreeModel(model=model)
+        self.tree = QTreeView()
+        self.tree.setHeaderHidden(True)
+        self.tree.setModel(self.model)
+        self.setWindowModality(Qt.WindowModality.WindowModal)
+        self.tree.doubleClicked.connect(self.accept)
+        self.currentItem = None
+
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        btn = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        btn.accepted.connect(self.accept)
+        btn.rejected.connect(self.reject)
+        layout.addWidget(self.tree)
+        layout.addWidget(btn)
+
+    def accept(self) -> None:
+        index = self.tree.currentIndex()
+        self.currentItem = self.model.childItem(index)
+        return super().accept()
+
+    def reject(self):
+        self.currentItem = None
+        return super().reject()
 
 
 class TemplateDialog(QDialog):

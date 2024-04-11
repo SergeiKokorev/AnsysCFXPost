@@ -1,1 +1,52 @@
-{"Axial compressor": [{"widget": "int_line", "name": "rmp", "title": "RPM", "cse": ""}, {"widget": "dbl_line", "name": "radius", "title": "Radius", "cse": ""}, {"widget": "interfaces", "name": "inlet", "title": "Inlet", "cse": ""}, {"widget": "interfaces", "name": "outlet", "title": "Outlet", "cse": ""}], "Centrifugal compressor": [{"widget": "int_line", "name": "rmp", "title": "RPM", "cse": ""}, {"widget": "dbl_line", "name": "radius", "title": "Radius", "cse": ""}, {"widget": "interfaces", "name": "inlet", "title": "Inlet", "cse": ""}, {"widget": "interfaces", "name": "outlet", "title": "Outlet", "cse": ""}]}
+{
+    "Axial compressor": {
+        "widgets": [
+            {
+                "widget": "Integer number input",
+                "name": "rmp",
+                "title": "RPM"
+            },
+            {
+                "widget": "Double number input",
+                "name": "radius",
+                "title": "Radius"
+            },
+            {
+                "widget": "Interfaces",
+                "name": "inlet",
+                "title": "Inlet"
+            },
+            {
+                "widget": "Interfaces",
+                "name": "outlet",
+                "title": "Outlet"
+            }
+        ],
+        "cse": ""
+    },
+    "Centrifugal compressor": {
+        "widgets": [
+            {
+                "widget": "Integer number input",
+                "name": "rmp",
+                "title": "RPM"
+            },
+            {
+                "widget": "Double number input",
+                "name": "radius",
+                "title": "Radius"
+            },
+            {
+                "widget": "Interfaces",
+                "name": "inlet",
+                "title": "Inlet"
+            },
+            {
+                "widget": "Interfaces",
+                "name": "outlet",
+                "title": "Outlet"
+            }
+        ],
+        "cse": ""
+    }
+}
