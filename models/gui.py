@@ -12,7 +12,7 @@ class ListModel(QAbstractListModel):
         super(ListModel, self).__init__(*args, **kwargs)
         self.model: List[Boundary | Template] = None
 
-    def setModel(self, model):
+    def setModel(self, model: List[Boundary | Template]):
         self.model = model
 
     def rowCount(self, parent: QModelIndex=None) -> int:
@@ -59,6 +59,7 @@ class TreeModel(QStandardItemModel):
             child = QStandardItem(c.item())
             sitem.setChild(i, child)
         self.setItem(self.model.rowCount()-1, sitem)
+        if isinstance(self.model, Domains): sitem.setEnabled(False)
         self.layoutChanged.emit()
 
     def addItems(self, items: List[Domain | Template]):
